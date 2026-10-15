@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>모아모아 과일가게 | 달콤 상큼 3매치 퍼즐 & 가게 확장 게임</title>
+  <meta name="description" content="같은 과일을 모아모아! 7x7 판에서 과일을 맞추고 물폭탄과 장바구니로 보너스 스테이지를 즐기며 나만의 과일가게를 100단계까지 확장해보세요!">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 캔버스 파티클 효과 오버레이 -->
+  <canvas id="particle-canvas"></canvas>
+
+  <!-- 글로벌 토스트 배너 알림 -->
+  <div id="global-banner-toast">환영합니다! 모아모아 과일가게 오픈!</div>
+
+  <div id="app-container">
+    <!-- 최상단 헤더 네비게이션 -->
+    <header class="game-header">
+      <div class="brand-section">
+        <div class="logo-icon" id="header-logo-icon">🧺</div>
+        <div class="title-group">
+          <h1>모아모아 과일가게</h1>
+          <p class="slogan">같은 과일을 모아모아~ 가게를 더 번창시키세요!</p>
+        </div>
+      </div>
+
+      <!-- 상점 확장 뱃지 (클릭 시 상점 확장 모달) -->
+      <div class="shop-expansion-badge" id="btn-shop-modal" title="가게 확장 메뉴 열기">
+        <span class="shop-avatar" id="shop-avatar-icon">🛒</span>
+        <div class="shop-meta">
+          <span class="shop-meta-title" id="shop-level-title">소박한 과일 수레</span>
+          <span class="shop-meta-buff" id="shop-bonus-tag">점수 +0%</span>
+        </div>
+      </div>
+
+      <!-- 기능 제어 버튼 모음 -->
+      <div class="header-actions">
+        <button class="btn-header" id="btn-stages-modal" title="1~100단계 스테이지 선택">
+          🗺️ <span class="hide-mobile">스테이지</span>
+        </button>
+        <button class="btn-header" id="btn-growth-gallery" title="10단계별 과일가게 발전 일러스트 갤러리">
+          🖼️ <span class="hide-mobile">가게성장</span>
+        </button>
+        <button class="btn-header" id="btn-sound-toggle" title="효과음 켜기/끄기">
+          🔊 <span class="hide-mobile">소리켬</span>
+        </button>
+        <button class="btn-header" id="btn-bgm-toggle" title="배경음악 토글">
+          🎵 <span class="hide-mobile">BGM 켜기</span>
+        </button>
+        <button class="btn-header accent" id="btn-help-modal" title="게임 규칙 및 아이템 안내">
+          ❓ <span class="hide-mobile">게임방법</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- 게임 메인 컨텐츠 영역 -->
+    <main class="game-viewport">
+      <!-- 좌측 정보 사이드바 -->
+      <aside class="sidebar-panel">
+        <!-- 현재 스테이지 정보 -->
+        <div class="stage-info-card">
+          <span class="stage-badge" id="current-stage-badge">Stage 1</span>
+          <h2 class="stage-title" id="stage-title">스테이지 1</h2>
+        </div>
+
+        <!-- 남은 시간 타이머 -->
+        <div class="metric-box">
+          <div class="metric-header">
+            <span>⏱️ 제한 시간</span>
+            <span id="timer-val" class="timer-value">60</span>
+          </div>
+          <div class="progress-track">
+            <div id="timer-bar-fill" class="progress-fill"></div>
+          </div>
+        </div>
+
+        <!-- 점수 현황 -->
+        <div class="metric-box">
+          <div class="metric-header">
+            <span>🎯 목표 점수</span>
+            <span id="target-score" class="metric-value">1,500</span>
+          </div>
+          <div class="metric-header" style="margin-top: 8px;">
+            <span>⭐ 현재 점수</span>
+            <span id="current-score" class="metric-value highlight">0</span>
+          </div>
+        </div>
+
+        <!-- 보유 골드 -->
+        <div class="metric-box">
+          <div class="metric-header">
+            <span>💰 보유 골드</span>
+            <span id="gold-val" class="metric-value gold">0</span>
+          </div>
+        </div>
+
+        <!-- 장바구니 아이템 슬롯 -->
+        <div class="basket-slot-box" id="basket-slot">
+          <div class="basket-slot-icon">🧺</div>
+          <div class="basket-slot-desc">한 줄 매칭 시 장바구니 획득!</div>
+          <small style="color: #888; font-size: 0.72rem;">(클리어 시 30초 보너스 타임 입장)</small>
+        </div>
+
+        <!-- 이번 스테이지 등장 과일 -->
+        <div class="fruits-preview-box">
+          <h4>출현 과일 (랜덤)</h4>
+          <div class="fruit-tags-wrap" id="stage-fruit-preview">
+            <!-- 동적 태그 삽입 -->
+          </div>
+        </div>
+
+        <!-- 일시정지 / 시작 컨트롤 -->
+        <button class="btn-primary" id="btn-play-pause" style="width: 100%;">
+          ▶️ 게임 시작 / 일시정지
+        </button>
+      </aside>
+
+      <!-- 우측 7x7 게임 보드 영역 -->
+      <section class="board-container">
+        <!-- 보너스 스테이지 전용 알림 바 -->
+        <div id="bonus-indicator-banner" class="bonus-banner hidden">
+          ✨ 30초 과일 파티 보너스 스테이지! 장애물 없이 마구 터뜨리세요! ✨
+        </div>
+
+        <!-- 7X7 그리드 판 -->
+        <div id="game-board" class="board-grid">
+          <!-- 49개의 셀이 동적으로 렌더링됩니다 -->
+        </div>
+
+        <!-- 보드 하단 스테이지 빠른 전환 편의 바 -->
+        <div style="display: flex; gap: 10px; margin-top: 14px; width: 100%; justify-content: center;">
+          <button class="btn-sub" id="btn-prev-stage-quick">◀ 이전 스테이지</button>
+          <button class="btn-sub" id="btn-next-stage-quick">다음 스테이지 ▶</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- 통합 모달 오버레이 -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-title">알림</h3>
+        <button class="modal-close-btn" id="modal-close-btn">&times;</button>
+      </div>
+
+      <!-- 1. 범용 안내 / 결과 모달 컨테이너 -->
+      <div id="modal-generic-container">
+        <div class="modal-content" id="modal-body">
+          <!-- 동적 바디 삽입 -->
+        </div>
+        <div class="modal-footer">
+          <button class="btn-primary" id="modal-action-btn">확인</button>
+        </div>
+      </div>
+
+      <!-- 2. 상점 확장 모달 컨테이너 -->
+      <div id="modal-shop-container" class="hidden">
+        <div class="modal-content">
+          <div style="margin-bottom: 14px; text-align: center;">
+            <p>과일을 팔아 모은 골드로 가게를 업그레이드하고 영구 점수 보너스를 획득하세요!</p>
+          </div>
+          <div class="shop-upgrade-list" id="shop-upgrade-list">
+            <!-- 동적 상점 카드 삽입 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. 100단계 스테이지 선택 맵 모달 컨테이너 -->
+      <div id="modal-stages-container" class="hidden">
+        <div class="modal-content">
+          <div style="margin-bottom: 12px; text-align: center;">
+            <p>플레이하고 싶은 스테이지를 선택하세요! (총 100단계)</p>
+          </div>
+          <div class="stage-grid-list" id="stage-grid-list">
+            <!-- 1~100 버튼 동적 삽입 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. 10단계별 과일가게 발전 일러스트 갤러리 컨테이너 -->
+      <div id="modal-gallery-container" class="hidden">
+        <div class="modal-content">
+          <div style="margin-bottom: 14px; text-align: center;">
+            <p>10, 20, 30 ... 단계마다 점점 발전하는 과일가게의 멋진 일러스트 모음집입니다!</p>
+          </div>
+          <div class="growth-gallery-grid" id="growth-gallery-grid">
+            <!-- 동적 마일스톤 갤러리 카드 삽입 -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 사운드 엔진 및 게임 메인 스크립트 로드 -->
+  <script src="sound.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
