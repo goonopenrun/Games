@@ -63,10 +63,10 @@
 
 ---
 
-## 📁 프로젝트 파일 위치
+## 📁 프로젝트 파일 구성
 
-- 메인 실행 파일: [index.html](file:///C:/Users/user/.gemini/antigravity-ide/scratch/fruit-shop-game/index.html)
-- 스타일 시트: [style.css](file:///C:/Users/user/.gemini/antigravity-ide/scratch/fruit-shop-game/style.css)
-- 게임 로직 엔진: [game.js](file:///C:/Users/user/.gemini/antigravity-ide/scratch/fruit-shop-game/game.js)
-- 오디오 사운드 신디사이저: [sound.js](file:///C:/Users/user/.gemini/antigravity-ide/scratch/fruit-shop-game/sound.js)
-- 고해상도 그래픽 에셋: [assets/](file:///C:/Users/user/.gemini/antigravity-ide/scratch/fruit-shop-game/assets)
+- 메인 실행 파일: [index.html](./index.html)
+- 스타일 시트: [style.css](./style.css)
+- 게임 로직 엔진: [game.js](./game.js)
+- 오디오 사운드 신디사이저: [sound.js](./sound.js)
+- 그래픽 에셋 디렉터리: [assets/](./assets/)
