@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>불났어요 호떡집 - 남대문 명물 호떡 타이쿤 게임</title>
+  <meta name="description" content="남대문 시장 365일 문전성시 '불났어요 호떡집'! 100단계 호떡 장인에 도전하세요. 꿀호떡, 야채호떡, 씨앗호떡, 매콤호떡, 팥호떡 합성 타이쿤!">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 메인 게임 래퍼 -->
+  <div id="game-app">
+
+    <!-- 상단 상태바 헤더 -->
+    <header id="game-header">
+      <div class="header-left">
+        <h1 class="game-logo" id="main-logo" title="불났어요 호떡집">
+          <span class="fire-icon">🔥</span> 불났어요 <span class="highlight">호떡집</span>
+        </h1>
+        <button id="btn-stage-badge" class="stage-badge" title="클릭하여 단계 이동">
+          <span class="badge-label">STAGE</span>
+          <span id="current-stage-num" class="badge-num">1</span>
+          <span class="badge-max">/100</span>
+        </button>
+      </div>
+
+      <div class="header-center">
+        <!-- 1분 30초 스테이지 타이머 -->
+        <div class="status-card timer-card" id="timer-box">
+          <div class="card-icon">⏱️</div>
+          <div class="card-info">
+            <span class="card-title">남은 영업 시간</span>
+            <span id="stage-timer-display" class="card-value timer-val">01:30</span>
+          </div>
+          <div class="timer-bar-container">
+            <div id="stage-timer-bar" class="timer-bar-fill"></div>
+          </div>
+        </div>
+
+        <!-- 주문 달성률 (80% 이상 목표) -->
+        <div class="status-card rate-card" id="rate-box">
+          <div class="card-icon">🎯</div>
+          <div class="card-info">
+            <span class="card-title">주문 수행률 (목표 80%)</span>
+            <div class="rate-numbers">
+              <span id="order-rate-display" class="card-value">0%</span>
+              <span id="order-ratio-display" class="order-subtext">(0/0건)</span>
+            </div>
+          </div>
+          <div class="rate-bar-container">
+            <div id="rate-target-mark" class="target-marker" style="left: 80%;" title="목표 기준선 80%"></div>
+            <div id="stage-rate-bar" class="rate-bar-fill"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- 현재 누적 점수 -->
+        <div class="status-card score-card">
+          <div class="card-icon">🪙</div>
+          <div class="card-info">
+            <span class="card-title">매출 점수</span>
+            <span id="current-score-display" class="card-value score-val">0</span>
+          </div>
+        </div>
+
+        <!-- 퀵 컨트롤 버튼 -->
+        <div class="header-buttons">
+          <button id="btn-recipe-book" class="icon-btn" title="전체 레시피 도감 열기">
+            📖 <span>레시피</span>
+          </button>
+          <button id="btn-sound-toggle" class="icon-btn" title="효과음 켜기/끄기">
+            🔊
+          </button>
+          <button id="btn-bgm-toggle" class="icon-btn" title="배경음악 켜기/끄기">
+            🎵
+          </button>
+          <button id="btn-debug-jump" class="icon-btn dev-btn" title="단계 빠른 테스트 이동">
+            ⚙️ <span>단계이동</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 메인 게임 플레이 구역 -->
+    <main id="game-main">
+
+      <!-- 1. 손님 대기 구역 (남대문 시장 카운터) -->
+      <section id="customers-section" aria-label="손님 대기열">
+        <div class="section-title-wrap">
+          <span class="section-title">🛒 남대문 시장 손님들 (대기 시간 1분)</span>
+          <span class="section-guide">💡 손님의 호떡 말풍선을 누르면 필요한 재료를 바로 확인할 수 있어요!</span>
+        </div>
+
+        <div id="customer-slots-container" class="customer-slots">
+          <!-- JS에서 4개 슬롯 렌더링 -->
+        </div>
+      </section>
+
+      <!-- 2. 호떡 조리 및 철판 구역 -->
+      <section id="kitchen-section" aria-label="호떡 조리대">
+        
+        <!-- 왼쪽: 현재 선택된 재료 및 조합 팬 -->
+        <div class="workbench-panel">
+          <div class="panel-header">
+            <span class="panel-title">🥣 호떡 반죽 & 조합대</span>
+            <div class="workbench-actions">
+              <button id="btn-clear-ingredients" class="btn-subtle" title="선택 재료 비우기">
+                🗑️ 비우기
+              </button>
+            </div>
+          </div>
+
+          <!-- 조합 중인 재료 슬롯 -->
+          <div id="bowl-container" class="mixing-bowl">
+            <div id="selected-ingredients-list" class="ingredients-chip-list">
+              <!-- 선택된 재료 칩들이 동적으로 들어옴 -->
+            </div>
+            <div id="bowl-empty-hint" class="empty-hint">
+              아래 재료를 클릭하여 호떡 반죽을 만드세요!
+            </div>
+            <!-- 행운의 ? 보너스 표시 배지 -->
+            <div id="lucky-ingredient-badge" class="lucky-badge hidden">
+              ✨ 행운의 ? 재료 합성 중! (추가 1~100점 보너스!)
+            </div>
+          </div>
+
+          <!-- 합성 결과 미리보기 / 액션 버튼 -->
+          <div class="craft-action-bar">
+            <button id="btn-craft-hotteok" class="btn-craft" disabled>
+              🔥 노릇노릇 호떡 굽기!
+            </button>
+          </div>
+        </div>
+
+        <!-- 중앙: 달궈진 무쇠 철판 & 누르개 (완성된 호떡 대기대) -->
+        <div class="griddle-panel">
+          <div class="griddle-top">
+            <span class="panel-title">🍳 남대문 특제 무쇠 철판</span>
+            <span id="griddle-status-text" class="griddle-status">지글지글 기름이 끓고 있어요!</span>
+          </div>
+
+          <div id="griddle-surface" class="griddle-plate">
+            <div class="oil-shimmer"></div>
+            <div class="steam-container">
+              <span class="steam steam-1">💨</span>
+              <span class="steam steam-2">💨</span>
+              <span class="steam steam-3">💨</span>
+            </div>
+
+            <!-- 완성된 호떡 서빙 대기 슬롯 -->
+            <div id="cooked-hotteok-tray" class="hotteok-tray">
+              <!-- 조리 완료된 호떡 카드가 나타남 -->
+              <div id="tray-empty-hint" class="tray-hint">
+                <span class="pan-presser">🔘</span>
+                <span>호떡을 구우면 이곳에 준비됩니다.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 완성 호떡 서빙 가이드 -->
+          <div class="griddle-bottom">
+            <button id="btn-auto-serve" class="btn-serve-all" disabled>
+              🛎️ 주문 손님에게 바로 전달하기
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- 3. 재료 선택 보관대 (10가지 기본 재료 + 무작위 ? 재료) -->
+      <section id="ingredients-section" aria-label="호떡 재료 보관대">
+        <div class="ingredients-header">
+          <span class="section-title">🧺 신선한 호떡 재료 창고</span>
+          <span class="ingredients-tip">재료를 누르면 반죽에 쏙! (행운의 ? 재료가 깜짝 등장합니다)</span>
+        </div>
+
+        <!-- 10개 재료 버튼 그리드 + ? 랜덤 재료 -->
+        <div class="ingredients-grid" id="ingredients-rack">
+          <!-- 1. 밀가루 -->
+          <button class="ing-btn" data-ingredient="밀가루">
+            <span class="ing-icon">🌾</span>
+            <span class="ing-name">밀가루</span>
+          </button>
+          <!-- 2. 물 -->
+          <button class="ing-btn" data-ingredient="물">
+            <span class="ing-icon">💧</span>
+            <span class="ing-name">물</span>
+          </button>
+          <!-- 3. 기름 -->
+          <button class="ing-btn" data-ingredient="기름">
+            <span class="ing-icon">🫗</span>
+            <span class="ing-name">기름</span>
+          </button>
+          <!-- 4. 설탕 -->
+          <button class="ing-btn" data-ingredient="설탕">
+            <span class="ing-icon">🍬</span>
+            <span class="ing-name">설탕</span>
+          </button>
+          <!-- 5. 당면 -->
+          <button class="ing-btn" data-ingredient="당면">
+            <span class="ing-icon">🍜</span>
+            <span class="ing-name">당면</span>
+          </button>
+          <!-- 6. 야채 -->
+          <button class="ing-btn" data-ingredient="야채">
+            <span class="ing-icon">🥬</span>
+            <span class="ing-name">야채</span>
+          </button>
+          <!-- 7. 시나몬가루 -->
+          <button class="ing-btn" data-ingredient="시나몬가루">
+            <span class="ing-icon">🍂</span>
+            <span class="ing-name">시나몬가루</span>
+          </button>
+          <!-- 8. 견과류 -->
+          <button class="ing-btn" data-ingredient="견과류">
+            <span class="ing-icon">🥜</span>
+            <span class="ing-name">견과류</span>
+          </button>
+          <!-- 9. 고춧가루 -->
+          <button class="ing-btn" data-ingredient="고춧가루">
+            <span class="ing-icon">🌶️</span>
+            <span class="ing-name">고춧가루</span>
+          </button>
+          <!-- 10. 팥 -->
+          <button class="ing-btn" data-ingredient="팥">
+            <span class="ing-icon">🫘</span>
+            <span class="ing-name">팥</span>
+          </button>
+
+          <!-- 11. 무작위 ? 랜덤 재료 (랜덤 확률로 출현) -->
+          <button id="btn-mystery-ingredient" class="ing-btn mystery-btn hidden" title="클릭하여 행운의 1~100점 추가 보너스 합성!">
+            <div class="mystery-sparkle">✨</div>
+            <span class="ing-icon mystery-q">❓</span>
+            <span class="ing-name">황금 재료(?)</span>
+            <div class="mystery-timer" id="mystery-countdown-bar"></div>
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- 플로팅 텍스트 컨테이너 (점수 획득, 페널티 등) -->
+    <div id="floating-scores-layer"></div>
+
+  </div>
+
+  <!-- ==================== 모달 레이어 ==================== -->
+
+  <!-- 1. 게임 시작 화면 모달 (인트로 및 소개) -->
+  <div id="modal-start" class="modal-overlay active">
+    <div class="modal-card intro-card">
+      <div class="intro-banner-wrap">
+        <img src="assets/images/main_banner.jpg" alt="불났어요 호떡집 대문" class="modal-banner-img">
+        <div class="intro-badge">남대문 365일 명물 맛집</div>
+      </div>
+      <div class="modal-content">
+        <h2 class="intro-title">🔥 불났어요 호떡집</h2>
+        <div class="intro-story-box">
+          <p class="story-line">사람들이 많이 찾는 남대문!</p>
+          <p class="story-line">그 중에서도 365일 장사에 사람들이 많은 그 곳</p>
+          <p class="story-highlight"><strong>'불났어요 호떡집'</strong></p>
+          <p class="story-line">고객만족 100% 호떡집의 주인이 되어 보자.</p>
+        </div>
+
+        <div class="rules-summary-box">
+          <h3>사장님의 특급 영업 규칙</h3>
+          <ul>
+            <li>총 100단계로 구성되며, 게임 시간은 1분 30초</li>
+            <li>손님은 1분 동안 기다리며, 시간이 지나 떠나면 -10점 감점!</li>
+            <li>주문을 80% 이상 처리해야 다음 단계로 넘어갑니다.</li>
+            <li>손님이 주문한 호떡을 누르면 필요한 재료를 확인할 수 있어요~</li>
+            <li>깜짝 등장하는 '?' 재료를 함께 넣으면 1~100점 보너스!</li>
+          </ul>
+        </div>
+
+        <div class="modal-actions">
+          <button id="btn-game-start" class="btn-primary-large">
+            🥖 영업 시작하기 (Stage 1)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 레시피 도감 / 개별 호떡 레시피 팝업 모달 -->
+  <div id="modal-recipe" class="modal-overlay">
+    <div class="modal-card recipe-modal-card">
+      <div class="modal-header">
+        <h3 id="recipe-modal-title">📖 호떡 레시피 비법서</h3>
+        <button id="btn-close-recipe" class="btn-close" aria-label="닫기">✖</button>
+      </div>
+      <div class="modal-content">
+        <p id="recipe-modal-desc" class="recipe-hint-text">
+          손님이 주문한 호떡의 필수 재료를 확인하고 정성껏 합성해 보세요!
+        </p>
+
+        <div id="recipe-cards-container" class="recipe-cards-grid">
+          <!-- 1) 꿀호떡 -->
+          <div class="recipe-item" data-hotteok="꿀호떡">
+            <div class="recipe-item-header">
+              <span class="hotteok-emoji">🍯</span>
+              <span class="hotteok-name">꿀호떡</span>
+              <span class="hotteok-score">+100점</span>
+            </div>
+            <div class="recipe-ingredients-tags">
+              <span class="tag">🌾 밀가루</span>
+              <span class="tag">💧 물</span>
+              <span class="tag">🫗 기름</span>
+              <span class="tag">🍬 설탕</span>
+            </div>
+            <button class="btn-auto-fill-recipe" data-recipe="꿀호떡">🥣 이 재료 바로 담기</button>
+          </div>
+
+          <!-- 2) 야채호떡 -->
+          <div class="recipe-item" data-hotteok="야채호떡">
+            <div class="recipe-item-header">
+              <span class="hotteok-emoji">🥬</span>
+              <span class="hotteok-name">야채호떡</span>
+              <span class="hotteok-score">+120점</span>
+            </div>
+            <div class="recipe-ingredients-tags">
+              <span class="tag">🌾 밀가루</span>
+              <span class="tag">💧 물</span>
+              <span class="tag">🫗 기름</span>
+              <span class="tag">🍜 당면</span>
+              <span class="tag">🥬 야채</span>
+            </div>
+            <button class="btn-auto-fill-recipe" data-recipe="야채호떡">🥣 이 재료 바로 담기</button>
+          </div>
+
+          <!-- 3) 씨앗호떡 -->
+          <div class="recipe-item" data-hotteok="씨앗호떡">
+            <div class="recipe-item-header">
+              <span class="hotteok-emoji">🥜</span>
+              <span class="hotteok-name">씨앗호떡</span>
+              <span class="hotteok-score">+150점</span>
+            </div>
+            <div class="recipe-ingredients-tags">
+              <span class="tag">🌾 밀가루</span>
+              <span class="tag">💧 물</span>
+              <span class="tag">🫗 기름</span>
+              <span class="tag">🍬 설탕</span>
+              <span class="tag">🍂 시나몬가루</span>
+              <span class="tag">🥜 견과류</span>
+            </div>
+            <button class="btn-auto-fill-recipe" data-recipe="씨앗호떡">🥣 이 재료 바로 담기</button>
+          </div>
+
+          <!-- 4) 매콤호떡 -->
+          <div class="recipe-item" data-hotteok="매콤호떡">
+            <div class="recipe-item-header">
+              <span class="hotteok-emoji">🌶️</span>
+              <span class="hotteok-name">매콤호떡</span>
+              <span class="hotteok-score">+140점</span>
+            </div>
+            <div class="recipe-ingredients-tags">
+              <span class="tag">🌾 밀가루</span>
+              <span class="tag">💧 물</span>
+              <span class="tag">🫗 기름</span>
+              <span class="tag">🍜 당면</span>
+              <span class="tag">🥬 야채</span>
+              <span class="tag">🌶️ 고춧가루</span>
+            </div>
+            <button class="btn-auto-fill-recipe" data-recipe="매콤호떡">🥣 이 재료 바로 담기</button>
+          </div>
+
+          <!-- 5) 팥호떡 -->
+          <div class="recipe-item" data-hotteok="팥호떡">
+            <div class="recipe-item-header">
+              <span class="hotteok-emoji">🫘</span>
+              <span class="hotteok-name">팥호떡</span>
+              <span class="hotteok-score">+130점</span>
+            </div>
+            <div class="recipe-ingredients-tags">
+              <span class="tag">🌾 밀가루</span>
+              <span class="tag">💧 물</span>
+              <span class="tag">🫗 기름</span>
+              <span class="tag">🍬 설탕</span>
+              <span class="tag">🫘 팥</span>
+            </div>
+            <button class="btn-auto-fill-recipe" data-recipe="팥호떡">🥣 이 재료 바로 담기</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-confirm-recipe" class="btn-primary">확인 완료</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 다음 단계 성공 모달 (웃는 중년 부부 사장님) -->
+  <div id="modal-stage-clear" class="modal-overlay">
+    <div class="modal-card result-card clear-card">
+      <div class="result-img-wrap">
+        <img src="assets/images/owner_smiling.jpg" alt="웃는 호떡집 중년 부부 사장님" class="result-owner-img">
+        <div class="result-speech-bubble">
+          "좋았어! 더 열심히 하자!"
+        </div>
+      </div>
+      <div class="modal-content text-center">
+        <h2 class="result-title clear-title">🎉 STAGE CLEAR!</h2>
+        <p class="result-subtext">남대문 손님들의 입맛을 완벽하게 사로잡았습니다!</p>
+
+        <div class="stats-summary-grid">
+          <div class="stat-box">
+            <span class="stat-lbl">주문 수행률</span>
+            <span id="clear-rate-val" class="stat-val highlight-green">85%</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-lbl">성공 주문</span>
+            <span id="clear-orders-val" class="stat-val">12건</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-lbl">총 매출 점수</span>
+            <span id="clear-score-val" class="stat-val highlight-amber">1,850점</span>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button id="btn-next-stage" class="btn-primary-large">
+            🚀 다음 단계로 이동! (STAGE <span id="next-stage-num-text">2</span>)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 게임 오버 모달 (우는 중년 부부 사장님) -->
+  <div id="modal-game-over" class="modal-overlay">
+    <div class="modal-card result-card fail-card">
+      <div class="result-img-wrap">
+        <img src="assets/images/owner_crying.jpg" alt="우는 호떡집 중년 부부 사장님" class="result-owner-img">
+        <div class="result-speech-bubble fail-bubble">
+          "고객 만족 100%의 길은 어려워"
+        </div>
+      </div>
+      <div class="modal-content text-center">
+        <h2 class="result-title fail-title">😭 GAME OVER</h2>
+        <p id="fail-reason-text" class="result-subtext">
+          주문 달성률이 80%에 미치지 못해 영업을 마감합니다...
+        </p>
+
+        <div class="stats-summary-grid">
+          <div class="stat-box">
+            <span class="stat-lbl">최종 달성률</span>
+            <span id="fail-rate-val" class="stat-val highlight-red">65%</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-lbl">도달 단계</span>
+            <span id="fail-stage-val" class="stat-val">STAGE 1</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-lbl">최종 매출 점수</span>
+            <span id="fail-score-val" class="stat-val">940점</span>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button id="btn-retry-stage" class="btn-retry">
+            🔄 현재 단계 다시 도전하기
+          </button>
+          <button id="btn-restart-game" class="btn-subtle">
+            처음부터 다시하기 (STAGE 1)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 100단계 최종 클리어 엔딩 모달 (대망의 그랜드 피날레) -->
+  <div id="modal-grand-ending" class="modal-overlay">
+    <div class="modal-card ending-card">
+      <div class="ending-img-wrap">
+        <img src="assets/images/ending_celebration.jpg" alt="호떡을 먹으며 웃는 사람들과 열심히 호떡을 만드는 사장님 부부" class="ending-owner-img">
+        <div class="ending-banner">🎊 100단계 대성공! 남대문 호떡 전설 등극! 🎊</div>
+      </div>
+      <div class="modal-content text-center">
+        <div class="ending-dialogue-box">
+          <p class="ending-line">"사람들이 많이 찾는 남대문!</p>
+          <p class="ending-line">그 중에서도 365일 장사가 사람들이 많은 그 곳</p>
+          <p class="ending-line highlight-gold"><strong>'불났어요 호떡집'</strong></p>
+          <p class="ending-line">고객만족 100%를 경험하고 싶다면</p>
+          <p class="ending-line ending-invite"><strong>불났어요 호떡집으로 오세요~"</strong></p>
+        </div>
+
+        <div class="final-stats-banner">
+          <span>🏆 100단계 완주 영광의 최종 점수: <strong id="ending-final-score" class="gold-text">0</strong>점!</span>
+        </div>
+
+        <div class="modal-actions">
+          <button id="btn-ending-restart" class="btn-primary-large">
+            ✨ 전설의 호떡집 처음부터 다시 즐기기
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. 단계 빠른 점프 모달 (개발자 / 평가자 테스트 편의 기능) -->
+  <div id="modal-stage-jump" class="modal-overlay">
+    <div class="modal-card jump-card">
+      <div class="modal-header">
+        <h3>⚡ 단계 바로 이동 (1~100)</h3>
+        <button id="btn-close-jump" class="btn-close">✖</button>
+      </div>
+      <div class="modal-content">
+        <p class="jump-desc">원하는 단계 번호를 선택하면 해당 단계로 즉시 이동하여 테스트할 수 있습니다.</p>
+        <div class="quick-jump-presets">
+          <button class="preset-btn" data-stage="1">1단계 (시작)</button>
+          <button class="preset-btn" data-stage="10">10단계</button>
+          <button class="preset-btn" data-stage="50">50단계</button>
+          <button class="preset-btn" data-stage="99">99단계</button>
+          <button class="preset-btn gold-preset" data-stage="100">🔥 100단계 (최종)</button>
+        </div>
+        <div class="custom-jump-input-row">
+          <label for="input-custom-stage">직접 입력:</label>
+          <input type="number" id="input-custom-stage" min="1" max="100" value="1">
+          <button id="btn-apply-jump" class="btn-primary">이동</button>
+        </div>
+        <div class="jump-test-helpers">
+          <button id="btn-debug-win-now" class="btn-helper">⚡ 현재 단계 즉시 성공(85%) 테스트</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 스크립트 연결 -->
+  <script src="audio.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
